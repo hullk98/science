@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تحدي العلوم التفاعلي 🔬</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Tajawal', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 30px;
+      width: 100%;
+      max-width: 650px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #38bdf8;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #94a3b8;
+      font-size: 15px;
+    }
+
+    /* شريط التقدم */
+    .progress-bar-container {
+      width: 100%;
+      height: 10px;
+      background-color: #334155;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 25px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      transition: width 0.4s ease;
+    }
+
+    /* كارت السؤال */
+    .question-box {
+      margin-bottom: 20px;
+    }
+
+    .question-category {
+      display: inline-block;
+      padding: 4px 12px;
+      background-color: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .question-text {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.5;
+      color: #f1f5f9;
+    }
+
+    /* الخيارات */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .option-btn {
+      background-color: #334155;
+      color: #f8fafc;
+      border: 2px solid transparent;
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: right;
+      transition: all 0.2s ease;
+    }
+
+    .option-btn:hover:not([disabled]) {
+      background-color: #475569;
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+    }
+
+    .option-btn.correct {
+      background-color: #059669 !important;
+      border-color: #10b981 !important;
+      color: #ffffff;
+    }
+
+    .option-btn.wrong {
+      background-color: #dc2626 !important;
+      border-color: #ef4444 !important;
+      color: #ffffff;
+    }
+
+    /* الشرح */
+    .explanation {
+      background-color: rgba(51, 65, 85, 0.5);
+      border-right: 4px solid #38bdf8;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    /* الأزرار السفليّة */
+    .footer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .score-tracker {
+      font-size: 15px;
+      color: #94a3b8;
+      font-weight: 700;
+    }
+
+    .next-btn, .start-btn, .restart-btn {
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      color: #ffffff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .next-btn:hover, .start-btn:hover, .restart-btn:hover {
+      opacity: 0.95;
+      transform: translateY(-2px);
+    }
+
+    .next-btn:disabled {
+      background: #475569;
+      cursor: not-allowed;
+      box-shadow: none;
+      opacity: 0.6;
+    }
+
+    /* الشاشات التمهيدية والنهائية */
+    .screen {
+      display: none;
+      text-align: center;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .result-score {
+      font-size: 48px;
+      font-weight: 800;
+      color: #38bdf8;
+      margin: 15px 0;
+    }
+
+    .result-msg {
+      font-size: 18px;
+      color: #cbd5e1;
+      margin-bottom: 25px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-container">
+    
+    <!-- شاشة البداية -->
+    <div id="start-screen" class="screen active">
+      <div class="header">
+        <h1>اختبار العلوم التفاعلي 🔬</h1>
+        <p>اختبر معلوماتك العامة في الفيزياء، الكيمياء، الأحياء، والفلك!</p>
+      </div>
+      <button class="start-btn" onclick="startQuiz()">ابدأ الاختبار الآن</button>
+    </div>
+
+    <!-- شاشة الأسئلة -->
+    <div id="quiz-screen" class="screen">
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+
+      <div class="question-box">
+        <span class="question-category" id="question-category">قسم العلم</span>
+        <h2 class="question-text" id="question-text">نص السؤال هنا؟</h2>
+      </div>
+
+      <div class="options-grid" id="options-container">
+        <!-- الخيارات تولد تلقائياً -->
+      </div>
+
+      <div class="explanation" id="explanation"></div>
+
+      <div class="footer-actions">
+        <div class="score-tracker">
+          السؤال <span id="current-q-num">1</span> من <span id="total-q-num">5</span>
+        </div>
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()" disabled>السؤال التالي</button>
+      </div>
+    </div>
+
+    <!-- شاشة النتيجة -->
+    <div id="result-screen" class="screen">
+      <div class="header">
+        <h1>اكتمل الاختبار! 🎉</h1>
+        <p>إليك نتيجتك النهائية في علوم الطبيعة:</p>
+      </div>
+      <div class="result-score" id="final-score">0 / 0</div>
+      <p class="result-msg" id="result-message"></p>
+      <button class="restart-btn" onclick="restartQuiz()">إعادة المحاولة 🔄</button>
+    </div>
+
+  </div>
+
+  <script>
+    // قائمة الأسئلة العلمية
+    const questions = [
+      {
+        category: "الفلك والكون",
+        question: "ما هو الكوكب الأكبر حجماً في مجموعتنا الشمسية؟",
+        options: ["كوكب المريخ", "كوكب المشتري", "كوكب زحل", "كوكب الزهرة"],
+        correct: 1,
+        explanation: "المشتري هو أكبر كواكب المجموعة الشمسية وتزيد كتلته عن ضعفي كتلة جميع الكواكب الأخرى مجتمعة."
+      },
+      {
+        category: "الفيزياء",
+        question: "ما هي السرعة القصوى للضوء في الفراغ تقريباً؟",
+        options: ["300,000 كم/ثانية", "150,000 كم/ثانية", "1,000,000 كم/ثانية", "50,000 كم/ثانية"],
+        correct: 0,
+        explanation: "ينتقل الضوء في الفراغ بسرعة تصل إلى حوالي 300,000 كيلومتر في الثانية الواحدة."
+      },
+      {
+        category: "الكيمياء",
+        question: "ما هو أصلب عنصر طبيعي موجود على وجه الأرض؟",
+        options: ["الحديد", "الذهب", "الألماس", "التيتانيوم"],
+        correct: 2,
+        explanation: "يتكون الألماس من ذرات الكربون المترابطة بشكل صلب جداً، مما يجعله أصلب مادة طبيعية معروفة."
+      },
+      {
+        category: "علم الأحياء",
+        question: "ما هو العضو المسؤول عن توليد الطاقة داخل الخلية الحية؟",
+        options: ["النواة", "الميتوكندريا", "الغشاء الخلوي", "الريبوسومات"],
+        correct: 1,
+        explanation: "تُعرف الميتوكندريا بـ 'محطة طاقة الخلية' لأنها تقوم بتحويل الغذاء والأكسجين إلى طاقة قابل للاستخدام."
+      },
+      {
+        category: "علوم الأرض والجو",
+        question: "ما هو الغاز الأكثر وفرة في الغلاف الجوي لسيارة الأرض؟",
+        options: ["الأكسجين", "ثاني أكسيد الكربون", "النيتروجين", "الهيدروجين"],
+        correct: 2,
+        explanation: "يشكل غاز النيتروجين نحو 78% من حجم الغلاف الجوي للأرض، بينما يمثل الأكسجين حوالي 21%."
+      }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+
+    const questionCategoryEl = document.getElementById('question-category');
+    const questionTextEl = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const explanationEl = document.getElementById('explanation');
+    const progressBar = document.getElementById('progress-bar');
+    const currentQNumEl = document.getElementById('current-q-num');
+    const totalQNumEl = document.getElementById('total-q-num');
+    const nextBtn = document.getElementById('next-btn');
+
+    function startQuiz() {
+      startScreen.classList.remove('active');
+      resultScreen.classList.remove('active');
+      quizScreen.classList.add('active');
+      currentQuestionIndex = 0;
+      score = 0;
+      totalQNumEl.textContent = questions.length;
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = questions[currentQuestionIndex];
+      questionCategoryEl.textContent = q.category;
+      questionTextEl.textContent = q.question;
+      currentQNumEl.textContent = currentQuestionIndex + 1;
+      explanationEl.style.display = 'none';
+      nextBtn.disabled = true;
+
+      // تحديث شريط التقدم
+      const progressPercent = ((currentQuestionIndex) / questions.length) * 100;
+      progressBar.style.width = progressPercent + '%';
+
+      // عرض الخيارات
+      optionsContainer.innerHTML = '';
+      q.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.classList.add('option-btn');
+        btn.textContent = option;
+        btn.onclick = () => selectOption(index, q.correct, q.explanation);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function selectOption(selectedIndex, correctIndex, explanationText) {
+      const optionButtons = optionsContainer.children;
+      
+      // تعطيل كل الأزرار بعد الاختيار
+      for (let btn of optionButtons) {
+        btn.disabled = true;
+      }
+
+      if (selectedIndex === correctIndex) {
+        optionButtons[selectedIndex].classList.add('correct');
+        score++;
+      } else {
+        optionButtons[selectedIndex].classList.add('wrong');
+        optionButtons[correctIndex].classList.add('correct');
+      }
+
+      // عرض الشرح العلمي
+      explanationEl.textContent = "💡 معلومة: " + explanationText;
+      explanationEl.style.display = 'block';
+
+      nextBtn.disabled = false;
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      quizScreen.classList.remove('active');
+      resultScreen.classList.add('active');
+      
+      document.getElementById('final-score').textContent = `${score} / ${questions.length}`;
+      
+      const percentage = (score / questions.length) * 100;
+      const msgEl = document.getElementById('result-message');
+
+      if (percentage === 100) {
+        msgEl.textContent = "ممتاز جداً! أنت عالم حقيقي 🏆";
+      } else if (percentage >= 60) {
+        msgEl.textContent = "نتيجة رائعة! لديك حصيلة علمية ممتازة 👍";
+      } else {
+        msgEl.textContent = "حاول مرة أخرى لتطوير معلوماتك العلمية ✨";
+      }
+    }
+
+    function restartQuiz() {
+      startQuiz();
+    }
+  </script>
+
+</body>
+</html>
